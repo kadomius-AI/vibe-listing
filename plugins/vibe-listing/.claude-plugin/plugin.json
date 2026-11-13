@@ -1,7 +1,7 @@
 {
   "name": "vibe-listing",
   "displayName": "Vibe Listing",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "/listing: real-estate listing photos in, a polished vertical listing video (9:16 + 4:5) with price, features and agent end card, plus listing copy out. Also includes /clips: long video in, captioned vertical clips out. Free voiceovers, original music, 3D motion and sound design, all local; no API keys, no payments.",
   "author": {
     "name": "kadomius-AI"
