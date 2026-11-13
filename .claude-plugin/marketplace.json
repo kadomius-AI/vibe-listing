@@ -1,0 +1,6 @@
+{
+  "name": "vibe-listing",
+  "owner": { "name": "kadomius-AI" },
+  "metadata": { "description": "/listing: real-estate listing photos in, a polished vertical listing video (9:16 + 4:5) with price, features and agent end card, plus listing copy out." },
+  "plugins": [ { "name": "vibe-listing", "source": "./plugins/vibe-listing", "description": "/listing: real-estate listing photos in, a polished vertical listing video (9:16 + 4:5) with price, features and agent end card, plus listing copy out." } ]
+}
