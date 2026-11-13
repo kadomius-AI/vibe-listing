@@ -179,7 +179,13 @@ def render(d, formats):
         out = d / f"listing_{fmt}.mp4"
         render_spec(p, out)
         p.unlink()
-        res.append(qa.report(out))
+        from vibekit import checks
+        rep = checks.run(out, fmt=fmt)
+        checks.save(rep, str(out) + ".qa.json")
+        r = qa.report(out)
+        r["qa"] = checks.summary(rep)
+        r["passed"] = rep["passed"]
+        res.append(r)
     return res
 
 
@@ -203,7 +209,10 @@ def main():
     elif a.cmd == "scaffold":
         print(json.dumps(scaffold(a), indent=1))
     else:
-        print(json.dumps(render(a.dir, a.formats.split(",")), indent=1))
+        res = render(a.dir, a.formats.split(","))
+        print(json.dumps(res, indent=1))
+        if not all(r.get("passed", True) for r in res):
+            sys.exit(2)
 
 
 if __name__ == "__main__":
