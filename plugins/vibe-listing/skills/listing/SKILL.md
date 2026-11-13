@@ -18,8 +18,13 @@ Run scripts through `../../scripts/run.sh` (auto-setup on first run). The user i
    Choose the order: the single most impressive shot first (usually exterior hero or the view), then living → kitchen →
    primary suite → bath → outdoor/pool → twilight. Drop dark, blurry, duplicate or cluttered shots. 6–12 photos is ideal.
 3. **Scaffold:** `run.sh listing.py scaffold --photos "a.jpg,b.jpg,…" --price "…" --address "…" --beds 4 --baths 3.5 --sqft 3200 --hook "…" --features "A|B|C" --agent "…" --brokerage "…" --phone "…" --style luxury --out "<folder>/listing"`
-4. **Polish the plan** (`listing.json`): make the hook line specific (the one thing a buyer would remember), match each
-   feature callout to the photo that shows it, keep text short.
+   Automatic: **3D parallax camera moves** on every photo (depth AI: near objects move more than far ones), a
+   **voice tour** (free local voice, words synced as captions), an **original music track** (ACE-Step, royalty-free),
+   **cuts on the beat**, soft fade/zoom transitions (luxury) or whip/flash (modern) with subtle sound effects.
+   Options: `--voice warm_female|british_female|deep_male|…`, `--music-prompt "…"`, `--music file.mp3`, `--no-voice`, `--no-music`.
+4. **Polish the plan** (`listing.json`): make the hook line specific (the one thing a buyer would remember), **move each
+   feature callout onto the photo that actually shows it** (kitchen text on the kitchen shot), rewrite `voiceover.text` as a
+   natural 20–40 word tour, set `motion` per photo (`parallax_push|pull|left|right|up`), keep text short.
 5. **Render:** `run.sh listing.py render "<folder>/listing" --formats vertical,portrait` → LOOK at each `_sheet.png`;
    fix any text over important details, then re-render.
 6. **Write the copy** in `listing_copy.md` (description, caption, hashtags) using only true facts, then deliver the videos + copy.

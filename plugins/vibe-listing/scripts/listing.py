@@ -31,7 +31,7 @@ STYLES = {
     # modern: bright, bold sans, faster cuts
     "modern": {"bg": "#111111", "accent": "#FFFFFF", "text": "#FFFFFF", "cta_text": "#111111", "secs": 1.8},
 }
-MOTIONS = ["zoom_in", "pan_right", "zoom_out", "pan_left"]
+MOTIONS = ["parallax_push", "parallax_right", "parallax_pull", "parallax_left", "parallax_up"]
 
 
 def _photos(arg):
@@ -91,31 +91,28 @@ def scaffold(a):
 
     scenes = []
     # 1) HOOK (first 3 s): hero photo, status badge, price big and central, one-line hook
-    scenes.append({"type": "image", "src": photos[0], "duration": 3.0, "motion": "zoom_in",
+    scenes.append({"type": "image", "src": photos[0], "duration": 3.0, "motion": "parallax_push", "transition": "cut",
                    "texts": [_t(a.status, "badge", 0.0, y=0.12),
                              _t(a.price, "price", 0.25, y=0.42),
                              *([_t(a.hook, "caption", 0.8, y=0.56)] if a.hook else [])]})
     # 2) address as a subtle lower third on the next shot
     rest = photos[1:]
     if rest:
-        scenes.append({"type": "image", "src": rest[0], "duration": secs, "motion": "pan_right",
-                       **({"fit": "contain"} if wide(rest[0]) and lux else {}),
-                       "texts": [_t(a.address, "lower", 0.2, align="left")]})
+        scenes.append({"type": "image", "src": rest[0], "duration": secs, "motion": "parallax_left",
+                       "texts": [_t(a.address, "lower", 0.2, align="left", y=0.12)]})
         rest = rest[1:]
     # 3) feature callouts on the strongest rooms, then the remaining photos as clean beats
     for i, ph in enumerate(rest):
         sc = {"type": "image", "src": ph, "duration": secs, "motion": MOTIONS[i % len(MOTIONS)]}
-        if wide(ph) and lux and i % 2 == 0:
-            sc["fit"] = "contain"
         if i < len(feats):
-            sc["texts"] = [_t(feats[i], "small" if lux else "caption", 0.25, y=0.80 if lux else 0.74)]
+            sc["texts"] = [_t(feats[i], "small" if lux else "badge", 0.25, y=0.20 if lux else 0.14)]
         scenes.append(sc)
     # 4) stats card
     if stats:
-        scenes.append({"type": "image", "src": photos[0], "duration": 2.2, "motion": "zoom_out", "fit": "contain",
-                       "texts": [_t(stats, "small" if lux else "caption", 0.1, y=0.8)]})
+        scenes.append({"type": "image", "src": photos[0], "duration": 2.2, "motion": "parallax_pull",
+                       "texts": [_t(stats, "small" if lux else "badge", 0.1, y=0.20 if lux else 0.14)]})
     # 5) agent end card + CTA
-    end = [_t(a.agent or "Your Name", title_style, 0.0, y=0.42)]
+    end = [_t(a.agent or "Your Name", title_style, 0.0, y=0.42, anim="words")]
     if a.brokerage:
         end.append(_t(a.brokerage, "small", 0.15, y=0.50))
     if a.phone:
@@ -128,10 +125,25 @@ def scaffold(a):
     scenes.append(card)
 
     spec = {"style": a.style, "size": [1080, 1920], "fps": 30,
-            "brand": {k: st[k] for k in ("bg", "accent", "text", "cta_text")}, "scenes": scenes}
+            "brand": {k: st[k] for k in ("bg", "accent", "text", "cta_text")}, "scenes": scenes,
+            "transition": "fade" if lux else "auto", "sfx": True,
+            "caption_style": "clean" if lux else "bold", "caption_y": 0.80}
+    if lux:  # luxury alternates soft fades and zooms
+        for k, sc in enumerate(scenes[1:], 1):
+            sc.setdefault("transition", "zoom" if k % 2 else "fade")
+    if not a.no_voice:
+        beds = f"{a.beds} bedrooms" if a.beds else ""
+        baths = f"{a.baths} baths" if a.baths else ""
+        script = ". ".join(x for x in [a.status.title(), a.address, ", ".join(x for x in (beds, baths) if x),
+                                         ", ".join(feats), a.hook or "", f"{a.cta}" + (f" with {a.agent}" if a.agent else "")] if x) + "."
+        spec["voiceover"] = {"text": script, "voice": a.voice or ("warm_female" if lux else "confident_male"), "speed": 1.0}
     if a.music:
         shutil.copy2(a.music, out / ("music" + Path(a.music).suffix.lower()))
         spec["music"] = "music" + Path(a.music).suffix.lower()
+    elif not a.no_music:
+        spec["music"] = {"prompt": a.music_prompt or (
+            "cinematic luxury ambient, warm piano, soft strings, slow elegant groove, 92 bpm, instrumental" if lux else
+            "modern deep house, punchy kick, warm synth chords, uplifting, 120 bpm, instrumental"), "seed": 5, "seconds": 40}
     (out / "listing.json").write_text(json.dumps(spec, indent=1))
     total = sum(s["duration"] for s in scenes)
     copy = f"""# Listing copy — {a.address}
@@ -182,6 +194,8 @@ def main():
         s.add_argument(k)
     s.add_argument("--style", default="luxury", choices=list(STYLES))
     s.add_argument("--status", default="JUST LISTED"); s.add_argument("--cta", default="DM for a private tour")
+    s.add_argument("--voice"); s.add_argument("--music-prompt")
+    s.add_argument("--no-voice", action="store_true"); s.add_argument("--no-music", action="store_true")
     r = sub.add_parser("render"); r.add_argument("dir"); r.add_argument("--formats", default="vertical")
     a = ap.parse_args()
     if a.cmd == "inspect":
